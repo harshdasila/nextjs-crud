@@ -21,8 +21,8 @@ model um_users {
   user_created_at DateTime  @default(now())
   user_updated_at DateTime  @updatedAt
   user_deleted_at DateTime?
-  um_roles        um_roles? @relation(fields: [user_role_id], references: [role_id])
-  user_role_id      Int? @default(5)
+  um_roles        um_roles @relation(fields: [user_role_id], references: [role_id])
+  user_role_id      Int @default(5)
 
   @@index([user_id])
 }
@@ -37,4 +37,15 @@ model um_roles {
   users           um_users[]
 
   @@index([role_id,role_slug])
+}
+
+model um_email_templates {
+  et_id Int @unique @default(autoincrement())
+  et_slug String @unique @db.VarChar(155)
+  et_title String @db.VarChar(255)
+  et_subject String @db.VarChar(255)
+  et_content String @db.VarChar(5000)
+  et_created_at DateTime @default(now())
+  et_updated_at DateTime @updatedAt
+  et_deleted_at DateTime?
 }

@@ -9,8 +9,11 @@ import Navbar from "@/components/navbar";
 import { getUserData } from "@/actions/user.action";
 import { useRouter } from "next/navigation";
 import { Toaster, toast } from "sonner";
+import { getAuthToken } from "@/services/frontend/storage.service";
+import { useUserDetails } from "@/hooks/useUserDetails";
 
 const UserData = ({ params }: { params: { user_id: string } }) => {
+  useUserDetails();
   const [userDetails, setUserDetails] = useState({
     user_number: "",
     user_created_at: "",
@@ -22,7 +25,8 @@ const UserData = ({ params }: { params: { user_id: string } }) => {
   const userId = Number(params.user_id);
 
   async function handleGetUserDetails() {
-    const response: any = await getUserData(userId);
+    const authHeader = getAuthToken();
+    const response: any = await getUserData(userId,authHeader);
     if (!response) {
       router.push("/list-user"); 
     }
@@ -46,7 +50,7 @@ const UserData = ({ params }: { params: { user_id: string } }) => {
 
   return (
     <>
-      <Navbar />
+      {/* <Navbar /> */}
 
       <div className="flex justify-center items-center h-screen">
         <div className="bg-white overflow-hidden shadow rounded-lg border w-[600px]">

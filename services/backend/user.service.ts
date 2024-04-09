@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import { NextResponse } from "next/server";
 import prisma from "@/db";
 import { redirect } from "next/navigation";
-
+const saltRounds = 10;
 
 export const isUserPresent = async (email: string) => {
   const userPresent = await prisma.um_users.findFirst({
@@ -25,7 +25,6 @@ export const isUserPresentId = async (id: number) => {
   return userPresent;
 };
 
-
 export const createUser = async (
   email: string,
   name: string,
@@ -45,7 +44,7 @@ export const createUser = async (
     });
     return createdUser;
   } catch (error) {
-    console.log(error)
+    console.log(error);
     throw new Error("Error in creating user.");
   }
 };
@@ -64,8 +63,8 @@ export const isUserExists = async (email: string, password: string) => {
         user_password: true,
       },
     });
-    if(!user){
-     return false;
+    if (!user) {
+      return false;
     }
     const passwordMatch = await bcrypt.compare(password, user!.user_password);
     if (passwordMatch) {
@@ -101,47 +100,59 @@ export const getAllUsers = async (
   recordsPerPage: number,
   page: number
 ) => {
+  const orderBy: any = sortBy!=="user_role" ?{
+    [sortBy]: sortOrder,
+  }:
+  {
+    um_roles :{
+      role_name: sortOrder,
+    }
+  }
   try {
     const listData = await prisma.um_users.findMany({
       where: {
+        um_roles:{role_name:{not: "Super Admin"}},
         user_deleted_at: null,
         OR: [
-          { user_name: { contains: searchQuery } },
-          { user_email: { contains: searchQuery } },
-          { user_number: { contains: searchQuery } },
+          { user_name: { contains: searchQuery, mode: "insensitive" } },
+          { user_email: { contains: searchQuery, mode: "insensitive" } },
+          { user_number: { contains: searchQuery, mode: "insensitive" } },
+          {um_roles:{role_name:{contains: searchQuery, mode: "insensitive"}}}
         ],
       },
-      orderBy: {
-        [sortBy]: sortOrder,
-      },
+      orderBy,
       take: recordsPerPage,
       skip: (page - 1) * recordsPerPage,
+      include: {
+        um_roles: true // Include the related role for each user
+      }
     });
 
-    const totalUser = await prisma.um_users.findMany({
-      where: {
+
+    const totalUser = await prisma.um_users.count({
+      where: { 
+        um_roles:{role_name:{not: "Super Admin"}},
         user_deleted_at: null,
         OR: [
-          { user_name: { contains: searchQuery } },
-          { user_email: { contains: searchQuery } },
-          { user_number: { contains: searchQuery } },
+          { user_name: { contains: searchQuery, mode: "insensitive" } },
+          { user_email: { contains: searchQuery, mode: "insensitive" } },
+          { user_number: { contains: searchQuery, mode: "insensitive" } },
+          {um_roles:{role_name:{contains: searchQuery, mode: "insensitive"}}}
         ],
       },
-      orderBy: {
-        [sortBy]: sortOrder,
-      },
+      orderBy,
     });
     return { listData, totalUser };
   } catch (e) {
+    console.log(e);
     throw new Error("Error in fetching data");
   }
 };
 
-
 export const getUserDetails = async (userId: number) => {
   try {
     const isPresent = isUserPresentId(userId);
-    if(isPresent==null){
+    if (isPresent == null) {
       return false;
     }
     const userData = await prisma.um_users.findUnique({
@@ -172,5 +183,46 @@ export const updateUserDetails = async (userId: number, body: any) => {
   } catch (error) {
     console.error("Error updating user details:", error);
     throw new Error("Failed to update user details");
+  }
+};
+export const changeUserPassword = async (
+  id: number,
+  newPassword: string,
+  oldPassword: string
+) => {
+  try {
+    const old = await prisma.um_users.findUnique({
+      where: {
+        user_id: id,
+        AND: [{ user_deleted_at: null }],
+      },
+      select: {
+        user_password: true,
+      },
+    });
+    if (old?.user_password) {
+      const verifyPassword = await bcrypt.compare(
+        oldPassword,
+        old.user_password
+      );
+      if (!verifyPassword) {
+        console.log(verifyPassword);
+        return false;
+      }
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+    const response = await prisma.um_users.update({
+      where: {
+        user_id: id,
+      },
+      data: {
+        user_password: hashedPassword,
+      },
+    });
+    return true; // Return the response from the update operation
+  } catch (error: any) {
+    console.log("Error Changing user password:", error);
+    throw new Error("Failed to change user password");
   }
 };

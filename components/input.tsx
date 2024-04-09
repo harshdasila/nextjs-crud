@@ -2,7 +2,7 @@ import { forwardRef } from "react";
 import { InputProps } from "@/interfaces/frontend";
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, placeholder, type, register, name }) => {
+  ({ label, placeholder, type, register, name },ref) => {
     return (
       <div className="space-y-2">
         {label && (

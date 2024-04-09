@@ -1,6 +1,6 @@
-"use client"
+"use client";
 import Input from "@/components/input";
-import Link from 'next/link';
+import Link from "next/link";
 import Button from "@/components/button";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,13 +10,12 @@ import { SignInData } from "@/interfaces/frontend";
 import { Toaster, toast } from "sonner";
 import "react-toastify/dist/ReactToastify.css";
 import { useEffect } from "react";
-import { useRecoilState } from "recoil";
-// import { userState } from "../state/UserDataState";
-import { useRouter } from 'next/navigation'
+import { useRouter } from "next/navigation";
+import { useUserContext } from "@/contexts/userContext";
 
 export default function Signin() {
-    const router = useRouter()
-//   const [userStateData, setUserStateData] = useRecoilState(userState);
+  const router = useRouter();
+  const { user, setUser } = useUserContext();
 
   function incorrectCredentailsError() {
     toast.error("Incorrect Credentials!");
@@ -50,11 +49,12 @@ export default function Signin() {
       });
       const responseData = await response.json();
       if (response.status === 200) {
-        console.log("Sign-in successful:", responseData);
         const jwtToken = responseData?.token;
         localStorage.setItem("jwtToken", jwtToken);
-        //recoil setting value here
-        // setUserStateData(responseData.userData);
+        setUser({
+          id: responseData.userData.id,
+          role_id: responseData.userData.role_id,
+        });
         router.push("/list-user");
       } else {
         console.error("Sign-in failed ", responseData);

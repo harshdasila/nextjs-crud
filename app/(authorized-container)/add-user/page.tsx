@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import Input from "@/components/input";
 import Link from "next/link";
 import Button from "@/components/button";
@@ -14,14 +14,20 @@ import { useRouter } from "next/navigation";
 import { useRecoilState, useRecoilValue } from "recoil";
 import Navbar from "@/components/navbar";
 import { addUser } from "@/actions/user.action";
+import { getAuthToken } from "@/services/frontend/storage.service";
+import { useEffect } from "react";
+import { useUserDetails } from "@/hooks/useUserDetails";
+import { useUserContext } from "@/contexts/userContext";
 
 
-export default function AddUser(){
-  
+export default function AddUser() {
+  // useUserDetails();
   const router = useRouter();
-  // if(userStateData?.role_id!=1){
-  //   navigate('/list-user')
-  // }
+  const { user, setUser } = useUserContext();
+  if(user?.role_id!=1){
+    router.back()
+  }
+
   const {
     register,
     handleSubmit,
@@ -39,45 +45,21 @@ export default function AddUser(){
   }
 
   const onSubmit = async (data: AddUserData) => {
-    console.log(data);
-    const response = await addUser(data);
-    if(!response){
-        incorrectCredentailsError();
-        // router.push('/list-user');
+    const authHeader = getAuthToken();
+    const response = await addUser(data, authHeader); //remove sending authHeader
+    if (!response) {
+      incorrectCredentailsError();
+      // router.push('/list-user');
+    } 
+    else {
+      userAddedSuccess();
+      router.push("/list-user");
     }
-    else{
-        userAddedSuccess();
-        router.push('/list-user')
-    }
-    // try {
-    //   const response = await axios.post(
-    //     "http://localhost:3001/user/add-user",
-    //     data,
-    //     {
-    //       headers: {
-    //         Authorization: localStorage.getItem("jwtToken"),
-    //       },
-    //     }
-    //   );
-
-    //   if (response.status === 200) {
-    //     console.log("User Added successful:", response);
-    //     userAddedSuccess();
-    //     navigate("/list-user");
-    //   } else if (response.status === 409) {
-    //     console.error("User Already pressent", response);
-    //     incorrectCredentailsError();
-    //   } else {
-    //     console.log("Internal server error");
-    //   }
-    // } catch (error) {
-    //   console.error("Error occurred during sign-in:", error);
-    // }
   };
 
   return (
     <>
-      <Navbar />
+      {/* <Navbar /> */}
       <div className="flex justify-center items-center h-screen">
         <div className="w-[430px] h-auto bg-white p-6 rounded-lg">
           <div className="text-center mb-3">
@@ -109,6 +91,7 @@ export default function AddUser(){
                 Select Role {"  "}
               </label>
               <select
+                defaultValue={5}
                 {...register("roleId")}
                 name="roleId"
                 id="roleId"
@@ -168,4 +151,4 @@ export default function AddUser(){
       </div>
     </>
   );
-};
+}

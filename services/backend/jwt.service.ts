@@ -1,17 +1,23 @@
 import { config } from "@/config/index.config";
-import jwt from "jsonwebtoken";
+import { SignJWT } from 'jose';
 
 export const signToken = async (
   userId: number,
-  user_role_id: number
+  userRoleId: number
 ): Promise<string> => {
+  const exp = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60;
+  const iat = Math.floor(Date.now() / 1000);
   try {
-    const jwtToken = jwt.sign(
-      { id: userId, role: user_role_id },
-      config.jwt.secret,
-      { expiresIn: "7d" }
-    );
-
+    const jwtToken = await new SignJWT({
+      id: userId,
+      roleId: userRoleId
+    })
+      .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
+      .setIssuedAt(iat)
+      .setExpirationTime(exp)
+      .setSubject(userId.toString()) 
+      .sign(new TextEncoder().encode(config.jwt.secret));
+    console.log(jwtToken,'sign')
     return jwtToken;
   } catch (error) {
     console.error("Error in signing JWT token:", error);

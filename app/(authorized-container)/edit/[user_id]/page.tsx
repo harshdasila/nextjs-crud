@@ -12,10 +12,13 @@ import { toast } from "sonner";
 import "react-toastify/dist/ReactToastify.css";
 import Navbar from "@/components/navbar";
 import { useRouter } from "next/navigation";
+import redirectAuthorizedPath from "@/lib/unauthorized-redirect";
+import { useUserContext } from "@/contexts/userContext";
 
 const EditUser = ({ params }: { params: { user_id: string } }) => {
   const router = useRouter();
   const id = Number(params.user_id);
+  const { user, setUser } = useUserContext();
 
   const {
     register,
@@ -51,13 +54,19 @@ const EditUser = ({ params }: { params: { user_id: string } }) => {
       setValue("number", userData.user_number);
       setValue("roleId", userData.user_role_id);
       setLoading(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching user data:", error);
+      if (error.response && error.response.status === 401) {
+        window.location.href = "/login";
+      }
       router.push("/list-user");
     }
   }
 
   useEffect(() => {
+    if (user.role_id !== 1) {
+      router.back();
+    }
     getUserData();
   }, []);
 
@@ -71,12 +80,14 @@ const EditUser = ({ params }: { params: { user_id: string } }) => {
             Authorization: localStorage.getItem("jwtToken"),
           },
         }
-      );  
+      );
       console.log("User edited successfully", res);
       userEditedMessage();
       router.push("/list-user");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error editing user:", error);
+      redirectAuthorizedPath(error.response.status);
+
       router.push("/list-user");
       // Handle error (e.g., show error message)
     }
@@ -87,10 +98,10 @@ const EditUser = ({ params }: { params: { user_id: string } }) => {
   }
   return (
     <>
-      <Navbar />
+      {/* <Navbar /> */}
 
       <div className="h-screen w-screen flex justify-center items-center">
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form>
           <div className="bg-white overflow-hidden shadow rounded-lg border w-[600px]">
             <div className="px-4 py-5 sm:px-6">
               <h3 className="text-lg leading-6 font-medium text-gray-900 ">
@@ -100,7 +111,7 @@ const EditUser = ({ params }: { params: { user_id: string } }) => {
             <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
               <div className="sm:divide-y sm:divide-gray-200 ">
                 <div className="py-3 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <div className="text-sm font-medium text-gray-500 flex items-center">
+                  <div className="text-sm font-medium flex items-center">
                     <div> Full name</div>
                   </div>
                   <div className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 ">
@@ -118,7 +129,7 @@ const EditUser = ({ params }: { params: { user_id: string } }) => {
                 </div>
 
                 <div className="py-3 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 ">
-                  <div className="text-sm font-medium text-gray-500 flex items-center">
+                  <div className="text-sm font-medium flex items-center">
                     <div>Email address</div>
                   </div>
                   <div className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
@@ -134,10 +145,10 @@ const EditUser = ({ params }: { params: { user_id: string } }) => {
                     </div>
                   </div>
                 </div>
-                <div className="py-3 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <div className="py-3 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 ">
                   <label htmlFor="roleId"> Role</label>
                   <select
-                    className="p-2 bg-white border border-black rounded-lg"
+                    className="p-2 bg-white border border-black rounded-lg "
                     {...register("roleId")}
                     name="roleId"
                     id="roleId"
@@ -150,7 +161,7 @@ const EditUser = ({ params }: { params: { user_id: string } }) => {
                   </select>
                 </div>
                 <div className="py-3 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 ">
-                  <div className="text-sm font-medium text-gray-500 flex items-center">
+                  <div className="text-sm font-medium flex items-center">
                     <div> Phone number</div>
                   </div>
                   <div className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
@@ -176,8 +187,9 @@ const EditUser = ({ params }: { params: { user_id: string } }) => {
                 Back
               </Link>
               <button
-                type="submit"
+                type="button"
                 className="text-white bg-blue-800 border border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-4 dark:bg-gray-800 dark:text-whiteml-4"
+                onClick={handleSubmit(onSubmit)}
               >
                 Submit
               </button>

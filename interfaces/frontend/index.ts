@@ -6,6 +6,7 @@ import { UseFormRegister } from "react-hook-form";
 export type SignInData = z.infer<typeof signInSchema>;
 
 export interface FormData {
+  cnfNewPassword: string;
   email: string;
   name: string;
   mobileNumber: string;
@@ -59,10 +60,11 @@ export interface User {
   // };
   user_number: string;
   user_created_at: string;
+  um_roles: any
 }
 
 export interface UserListProps {
-  user: User;
+  userr: User;
   handleDelete: (id: number) => void;
 }
 
@@ -132,4 +134,10 @@ export interface UserStateDataTwo{
   user_email: string,
   user_id: number,
   user_role_id: number
+}
+
+export interface ChangePassword{
+  oldPassword: string,
+  newPassword: string,
+  cnfNewPassword: string
 }

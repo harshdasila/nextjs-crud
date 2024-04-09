@@ -1,4 +1,3 @@
-
 import React from "react";
 import { PaginationProps } from "@/interfaces/frontend";
 
@@ -12,7 +11,7 @@ const Pagination: React.FC<PaginationProps> = ({
   return (
     <div className="w-full flex justify-center mb-6">
       <button
-        className={`p-2 border-2 border-blue-600 border-r-0 bg-blue-600 rounded-l-xl text-lg text-white ${
+        className={`p-2 border-2 border-black border-r-0 bg-black rounded-l-xl text-lg text-white ${
           page === 1 ? "cursor-not-allowed" : "cursor-pointer"
         }`}
         onClick={goBack}
@@ -21,11 +20,13 @@ const Pagination: React.FC<PaginationProps> = ({
         Previous
       </button>
 
-      <button className="p-2 border-2 border-blue-600 text-blue-600 bg-gray-100 text-lg font-semibold">
+      <button className="p-2 border-2 border-white text-white bg-black text-lg font-semibold">
         {pageProp}
       </button>
       <button
-        className={`p-2 border-2 border-blue-700 bg-blue-600 border-l-0 rounded-r-xl text-lg text-white ${page===totalPages ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+        className={`p-2 border-2 border-white bg-black border-l-0 rounded-r-xl text-lg text-white ${
+          page === totalPages ? "cursor-not-allowed" : "cursor-pointer"
+        }`}
         onClick={goAhead}
       >
         Next

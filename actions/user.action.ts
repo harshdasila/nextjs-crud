@@ -2,10 +2,19 @@
 import prisma from "@/db";
 import { AddUserData } from "@/interfaces/frontend";
 import { isUserPresent } from "@/services/backend/user.service";
+import verifyToken from "@/services/frontend/jwt.action.service";
 import bcrypt from 'bcrypt'
+import * as jose from "jose";
+import { redirect } from 'next/navigation';
+
+const jwtConfig = {
+  secret: new TextEncoder().encode(process.env.JWT_SECRET),
+};
+
 const saltRounds = 10;
 
-export async function deleteUser(userId: number) {
+export async function deleteUser(userId: number, authHeader: any) {
+  
   const user = await prisma.um_users.findFirst({
     where:{
       user_id: userId
@@ -29,7 +38,7 @@ export async function deleteUser(userId: number) {
   return false;
 }
 
-export async function getUserData(userId: number){
+export async function getUserData(userId: number, authHeader: any){
   try{
     const response = await prisma.um_users.findUnique({
       where:{
@@ -50,7 +59,7 @@ export async function getUserData(userId: number){
   
 }
 
-export async function addUser(data: AddUserData){
+export async function addUser(data: AddUserData, authHeader: any){
   try{
     const isEmailPresent = await isUserPresent(data.email);
     if(isEmailPresent){

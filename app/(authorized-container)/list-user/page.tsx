@@ -14,15 +14,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getAuthToken } from "@/services/frontend/storage.service";
 import { deleteUser } from "@/actions/user.action";
-// import { useRecoilState } from "recoil";
-// import { userState } from "../state/UserDataState";
-// import { UserStateData } from "../interfaces";
-// import { useUserData } from "../hooks/useUserData";
+import redirectAuthorizedPath from "@/lib/unauthorized-redirect";
+import { useUserContext } from "@/contexts/userContext";
 
 const ListUsers = () => {
-  //   useUserData();
-  //   const [userStateData, setUserStateData] =
-  //     useRecoilState<UserStateData>(userState);
   const [userData, setUserData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState("user_created_at");
@@ -31,6 +26,7 @@ const ListUsers = () => {
   const [page, setPage] = useState(1);
   const [recordsPerPage, setRecordsPerPage] = useState(5);
   const [totalUsers, setTotalUser] = useState(0);
+  const { user, setUser } = useUserContext();
 
   const jwtToken = getAuthToken();
 
@@ -57,21 +53,20 @@ const ListUsers = () => {
       }
       setLoading(false);
       setTotalUser(res.data.totalUsers);
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
-      router.push("/login");
-      throw new Error("cant get auth token");
+      redirectAuthorizedPath(error.response.status);
     }
   }
 
   async function handleDelete(userId: number) {
-    const res = await deleteUser(userId);
+    const authHeader = getAuthToken();
+    const res = await deleteUser(userId, authHeader);
     if (res) {
       userDeletedMessage();
-      console.log("User deleted successfully");
       await getUserData();
     } else {
-      console.log("error in deleteing");
+      console.log("error in deleting");
     }
   }
 
@@ -93,7 +88,7 @@ const ListUsers = () => {
 
   useEffect(() => {
     getUserData();
-  }, [page, totalUsers, recordsPerPage]);
+  }, [page, recordsPerPage]);
 
   if (loading) {
     return (
@@ -105,8 +100,7 @@ const ListUsers = () => {
 
   return (
     <>
-      <Navbar />
-      {/* <Toaster richColors position="top-right"/> */}
+      {/* <Navbar /> */}
       <div className="flex justify-center  h-screen">
         <div className="relative sm:rounded-lg">
           <div className="text-3xl font-bold text-center mt-2 p-4 rounded-lg">
@@ -117,7 +111,7 @@ const ListUsers = () => {
             sortBy={sortBy}
             setUserData={setUserData}
             sortOrder={sortOrder}
-            input={input}
+            input={input.trim()}
             setInput={setInput}
             recordsPerPage={recordsPerPage}
             page={page}
@@ -125,18 +119,18 @@ const ListUsers = () => {
             setTotalUsers={setTotalUser}
           />
 
-          {
-            /*userStateData?.role_id === 1 &&*/ <Link
-              className="text-white w-[100px] bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 float-end"
+          {user?.role_id === 1 && (
+            <Link
+              className="text-white w-[100px] bg-black hover:bg-black focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 text-center dark:bg-black dark:hover:bg-black dark:focus:ring-white float-end"
               href={"/add-user"}
             >
               Add User
             </Link>
-          }
+          )}
           <br></br>
           <br></br>
           <table className="table-fixed w-auto p-5 text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-            <thead className="text-xs  uppercase  bg-blue-600 text-white w-[700px]">
+            <thead className="text-xs  uppercase  bg-black text-white w-[700px]">
               <tr>
                 <th scope="col" className="px-6 py-3 text-base">
                   <button
@@ -234,26 +228,50 @@ const ListUsers = () => {
                     ) : null}
                   </button>
                 </th>
+
+                <th scope="col" className="px-6 py-3 text-base w-[13rem]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      requestSort("user_role"),
+                        setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+                    }}
+                  >
+                    Roles{" "}
+                    {sortBy == "user_role" ? (
+                      sortOrder == "asc" ? (
+                        <FontAwesomeIcon
+                          icon={faArrowDown}
+                          style={{ color: "#fafafa" }}
+                        />
+                      ) : (
+                        <FontAwesomeIcon
+                          icon={faArrowUp}
+                          style={{ color: "#fafafa" }}
+                        />
+                      )
+                    ) : null}
+                  </button>
+                </th>
+
                 <th scope="col" className="px-6 py-3 text-base">
                   More Details
                 </th>
-                {
-                  /*userStateData?.role_id === 1 && */ <th
-                    scope="col"
-                    className="px-6 py-3 text-base"
-                  >
+                {user?.role_id === 1 && (
+                  <th scope="col" className="px-6 py-3 text-base">
                     Options
                   </th>
-                }
+                )}
               </tr>
             </thead>
             <tbody>
-              {userData.map((user, index) => {
+              {userData.map((user: any, index) => {
                 const userId: number = user["user_id"];
+                // const roleId = user.user_role_id;
                 return (
                   <UserList
                     key={index}
-                    user={user}
+                    userr={user}
                     handleDelete={() => handleDelete(userId)}
                   />
                 );
@@ -263,13 +281,11 @@ const ListUsers = () => {
           <div className="selectRecordsContainer float-right mt-3">
             <label htmlFor="recordsPerPage">Records Per Page</label>
             <select
+              defaultValue={5}
               id="recordsPerPage"
               onChange={(e) => setRecordsPerPage(Number(e.target.value))}
-              value={recordsPerPage}
             >
-              <option selected value="5">
-                5
-              </option>
+              <option value="5">5</option>
               <option value="10">10</option>
               <option value="15">15</option>
               <option value="20">20</option>

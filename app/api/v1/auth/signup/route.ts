@@ -15,7 +15,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 const saltRounds = 10;
 
-export async function POST(req: NextRequest, res: NextResponse) {
+export async function POST(req: NextRequest) {
   const data = await req.json();
   const { email, password, name, mobileNumber, cnfPassword } = data;
   const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest, res: NextResponse) {
     email,
     password,
     mobileNumber,
-    cnfPassword
+    cnfPassword,
   };
 
   const validationResult = signUpSchema.safeParse(signUpData);
@@ -74,10 +74,13 @@ export async function POST(req: NextRequest, res: NextResponse) {
     }
   } catch (e: any) {
     console.log(e);
-    return NextResponse.json({
-      message: "Error occurred.",
-    },{
-        status: 500
-    });
+    return NextResponse.json(
+      {
+        message: "Error occurred.",
+      },
+      {
+        status: 500,
+      }
+    );
   }
-};
+}
