@@ -2,17 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { signInSchema } from "@/schemas/frontend";
 import { isUserExists } from "@/services/backend/user.service";
 import { signToken } from "@/services/backend/jwt.service";
-import prisma from "@/db"
-
+import prisma from "@/db";
 
 export async function POST(req: NextRequest) {
+
   const body = await req.json();
   const { email, password } = body;
+  
+  
   const signInData = {
     email,
     password,
   };
-
+  console.log(signInData)
   const validationResult = signInSchema.safeParse(signInData);
 
   if (!validationResult.success) {
@@ -51,8 +53,8 @@ export async function POST(req: NextRequest) {
         }
       );
     }
-  } catch (error){
-    console.log(error)
+  } catch (error) {
+    console.log(error);
     return NextResponse.json(
       {
         message: "Error in creating token.",
