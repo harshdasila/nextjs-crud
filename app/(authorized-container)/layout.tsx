@@ -26,7 +26,7 @@ export default function Layout({
 
   async function setUserData() {
     try {
-      const res = await axios.get("http://localhost:3000/api/v1/me", {
+      const res = await axios.get("http://localhost:3000/api/v1/admin/me", {
         headers: {
           Authorization: localStorage.getItem("jwtToken"),
         },
@@ -41,10 +41,5 @@ export default function Layout({
       console.log("error in getting user details", error);
     }
   }
-  return (
-    <>
-      {[<Navbar key="navbar" />, children]}
-    </>
-  );
-  
+  return <>{[<Navbar key="navbar" />, children]}</>;
 }

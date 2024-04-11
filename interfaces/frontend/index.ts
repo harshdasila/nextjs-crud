@@ -110,7 +110,12 @@ export interface EditFormData {
   number: string,
   roleId: number
 }
-
+export interface SuperAdminEditFormData {
+  name: string,
+  email: string,
+  number: string,
+  roleId: number
+}
 export interface AllEmailTemplateData {
   et_id: string,
   et_slug: string,

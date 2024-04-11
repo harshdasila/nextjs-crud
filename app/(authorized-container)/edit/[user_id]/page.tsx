@@ -39,7 +39,7 @@ const EditUser = ({ params }: { params: { user_id: string } }) => {
   async function getUserData() {
     try {
       const response = await axios.get(
-        `http://localhost:3000/api/v1/user/update/${id}`,
+        `http://localhost:3000/api/v1/admin/user/update/${id}`,
         {
           headers: {
             Authorization: localStorage.getItem("jwtToken"),
@@ -73,7 +73,7 @@ const EditUser = ({ params }: { params: { user_id: string } }) => {
   const onSubmit = async (data: EditFormData) => {
     try {
       const res = await axios.put(
-        `http://localhost:3000/api/v1/user/update/${id}`,
+        `http://localhost:3000/api/v1/admin/user/update/${id}`,
         data,
         {
           headers: {
@@ -98,10 +98,8 @@ const EditUser = ({ params }: { params: { user_id: string } }) => {
   }
   return (
     <>
-      {/* <Navbar /> */}
-
       <div className="h-screen w-screen flex justify-center items-center">
-        <form>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="bg-white overflow-hidden shadow rounded-lg border w-[600px]">
             <div className="px-4 py-5 sm:px-6">
               <h3 className="text-lg leading-6 font-medium text-gray-900 ">
@@ -187,9 +185,8 @@ const EditUser = ({ params }: { params: { user_id: string } }) => {
                 Back
               </Link>
               <button
-                type="button"
+                type="submit"
                 className="text-white bg-blue-800 border border-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-4 dark:bg-gray-800 dark:text-whiteml-4"
-                onClick={handleSubmit(onSubmit)}
               >
                 Submit
               </button>

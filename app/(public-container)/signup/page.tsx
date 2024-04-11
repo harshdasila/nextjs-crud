@@ -27,7 +27,7 @@ export default function Signup() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      const response = await fetch("http://localhost:3000/api/v1/auth/signup", {
+      const response = await fetch("http://localhost:3000/api/v1/admin/auth/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import { NextResponse } from "next/server";
 import prisma from "@/db";
 import { redirect } from "next/navigation";
+import { prepareAndSend } from "./mail.service";
 const saltRounds = 10;
 
 export const isUserPresent = async (email: string) => {
@@ -42,10 +43,45 @@ export const createUser = async (
         user_role_id: userRole,
       },
     });
+    prepareAndSend({
+      email: email,
+      mailType: "user_registered",
+      data: { name: name },
+    });
     return createdUser;
   } catch (error) {
     console.log(error);
     throw new Error("Error in creating user.");
+  }
+};
+
+export const isSuperAdminExists = async (email: string, password: string) => {
+  try {
+    const user = await prisma.um_users.findFirst({
+      where: {
+        user_email: email,
+        // user_password: password,
+        user_deleted_at: null,
+        user_role_id: 1
+      },
+      select: {
+        user_id: true,
+        user_role_id: true,
+        user_password: true,
+      },
+    });
+    if (!user) {
+      return false;
+    }
+    const passwordMatch = await bcrypt.compare(password, user!.user_password);
+    if (passwordMatch) {
+      return user;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    console.log(error, "andar");
+    throw new Error("Error in finding user.");
   }
 };
 
@@ -56,6 +92,7 @@ export const isUserExists = async (email: string, password: string) => {
         user_email: email,
         // user_password: password,
         user_deleted_at: null,
+        //can make a check here for not super admin
       },
       select: {
         user_id: true,
@@ -100,44 +137,53 @@ export const getAllUsers = async (
   recordsPerPage: number,
   page: number
 ) => {
-  const orderBy: any = sortBy!=="user_role" ?{
-    [sortBy]: sortOrder,
-  }:
-  {
-    um_roles :{
-      role_name: sortOrder,
-    }
-  }
+  const orderBy: any =
+    sortBy !== "user_role"
+      ? {
+          [sortBy]: sortOrder,
+        }
+      : {
+          um_roles: {
+            role_name: sortOrder,
+          },
+        };
   try {
     const listData = await prisma.um_users.findMany({
       where: {
-        um_roles:{role_name:{not: "Super Admin"}},
+        um_roles: { role_name: { not: "Super Admin" } },
         user_deleted_at: null,
         OR: [
           { user_name: { contains: searchQuery, mode: "insensitive" } },
           { user_email: { contains: searchQuery, mode: "insensitive" } },
           { user_number: { contains: searchQuery, mode: "insensitive" } },
-          {um_roles:{role_name:{contains: searchQuery, mode: "insensitive"}}}
+          {
+            um_roles: {
+              role_name: { contains: searchQuery, mode: "insensitive" },
+            },
+          },
         ],
       },
       orderBy,
       take: recordsPerPage,
       skip: (page - 1) * recordsPerPage,
       include: {
-        um_roles: true // Include the related role for each user
-      }
+        um_roles: true, // Include the related role for each user
+      },
     });
 
-
     const totalUser = await prisma.um_users.count({
-      where: { 
-        um_roles:{role_name:{not: "Super Admin"}},
+      where: {
+        um_roles: { role_name: { not: "Super Admin" } },
         user_deleted_at: null,
         OR: [
           { user_name: { contains: searchQuery, mode: "insensitive" } },
           { user_email: { contains: searchQuery, mode: "insensitive" } },
           { user_number: { contains: searchQuery, mode: "insensitive" } },
-          {um_roles:{role_name:{contains: searchQuery, mode: "insensitive"}}}
+          {
+            um_roles: {
+              role_name: { contains: searchQuery, mode: "insensitive" },
+            },
+          },
         ],
       },
       orderBy,
@@ -219,6 +265,11 @@ export const changeUserPassword = async (
       data: {
         user_password: hashedPassword,
       },
+    });
+    prepareAndSend({
+      email: response.user_email,
+      mailType: "change_password",
+      data: { name: response.user_name},
     });
     return true; // Return the response from the update operation
   } catch (error: any) {

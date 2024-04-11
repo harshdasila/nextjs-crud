@@ -1,20 +1,19 @@
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/db";
 import { addRolesTableData } from "./add_roles_table";
 import { add_users } from "./add_users";
 import { addEmailTemplates } from "./add_email_templates";
 
 
-const primsa = new PrismaClient();
 async function main(){
-    addRolesTableData(primsa);
-    add_users(primsa);
-    addEmailTemplates(primsa);
+    addRolesTableData(prisma);
+    add_users(prisma);
+    addEmailTemplates(prisma);
 }
 main().then(async()=>{
-    await primsa.$disconnect();
+    await prisma.$disconnect();
 })
 .catch(async(e)=>{
     console.log(e);
-    primsa.$disconnect();
+    prisma.$disconnect();
     process.exit(1);
 });

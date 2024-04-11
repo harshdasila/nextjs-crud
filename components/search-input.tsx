@@ -94,7 +94,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
             type="search"
             id="default-search"
             className="block w-full p-4 ps-10 text-sm text-black border border-gray-300 rounded-lg bg-gray-50   dark:placeholder-gray-400  "
-            placeholder="Search Mockups, Logos..."
+            placeholder="Search Name, Number..."
           />
           <button
             type="submit"

@@ -36,7 +36,7 @@ export default function EditEmailTemplate() {
   useEffect(() => {
     axios
       .post(
-        `http://localhost:3000/api/v1/email-template/edit`,
+        `http://localhost:3000/api/v1/admin/email-template/edit`,
         {
           slug: slug,
         },
@@ -64,7 +64,7 @@ export default function EditEmailTemplate() {
   const handleSubmit = async () => {
     try {
       const response = await axios.put(
-        "http://localhost:3000/api/v1/email-template/edit",
+        "http://localhost:3000/api/v1/admin/email-template/edit",
         {
           slug: slug,
           emailData: editedData,

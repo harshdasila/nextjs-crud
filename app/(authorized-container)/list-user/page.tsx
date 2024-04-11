@@ -16,6 +16,7 @@ import { getAuthToken } from "@/services/frontend/storage.service";
 import { deleteUser } from "@/actions/user.action";
 import redirectAuthorizedPath from "@/lib/unauthorized-redirect";
 import { useUserContext } from "@/contexts/userContext";
+import Swal from 'sweetalert2'
 
 const ListUsers = () => {
   const [userData, setUserData] = useState([]);
@@ -27,6 +28,7 @@ const ListUsers = () => {
   const [recordsPerPage, setRecordsPerPage] = useState(5);
   const [totalUsers, setTotalUser] = useState(0);
   const { user, setUser } = useUserContext();
+  const [swalProps, setSwalProps] = useState({});
 
   const jwtToken = getAuthToken();
 
@@ -36,10 +38,28 @@ const ListUsers = () => {
     toast.success("User Deleted Successfully!");
   }
 
+  const Alert = async () => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You want to delete the user!",
+      icon: "warning",
+      showCancelButton: true,
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Okay"
+    });
+  
+    if (result.isConfirmed) {
+      return true; // User confirmed the action 
+    } else {
+      return false; // User clicked cancel or closed the modal
+    }
+  };
+  
+
   async function getUserData() {
     try {
       const res = await axios.get(
-        `http://localhost:3000/api/v1/user/list?sortBy=${sortBy}&sortOrder=${sortOrder}&searchQuery=${input}&recordsPerPage=${recordsPerPage}&page=${page}`,
+        `http://localhost:3000/api/v1/admin/user/list?sortBy=${sortBy}&sortOrder=${sortOrder}&searchQuery=${input}&recordsPerPage=${recordsPerPage}&page=${page}`,
         {
           method: "GET",
           headers: {
@@ -61,12 +81,16 @@ const ListUsers = () => {
 
   async function handleDelete(userId: number) {
     const authHeader = getAuthToken();
-    const res = await deleteUser(userId, authHeader);
-    if (res) {
-      userDeletedMessage();
-      await getUserData();
-    } else {
-      console.log("error in deleting");
+    const confirmed = await Alert();
+    
+    if (confirmed) {
+      const res = await deleteUser(userId, authHeader);
+      if (res) {
+        userDeletedMessage();
+        await getUserData();
+      } else {
+        console.log("error in deleting");
+      }
     }
   }
 
@@ -87,6 +111,24 @@ const ListUsers = () => {
   }
 
   useEffect(() => {
+    axios
+      .get("http://localhost:3000/api/v1/admin/settings", {
+        headers: {
+          Authorization: getAuthToken(),
+        },
+      })
+      .then((res) => {
+        const rowsPerPageSetting = res.data.res.find(
+          (setting: { setting_key: string }) =>
+            setting.setting_key === "rowsPerPage"
+        );
+        if (rowsPerPageSetting) {
+          setRecordsPerPage(rowsPerPageSetting.setting_value);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching settings:", error);
+      });
     getUserData();
   }, [page, recordsPerPage]);
 
@@ -278,20 +320,19 @@ const ListUsers = () => {
               })}
             </tbody>
           </table>
-          <div className="selectRecordsContainer float-right mt-3">
+          {/* <div className="selectRecordsContainer float-right mt-3">
             <label htmlFor="recordsPerPage">Records Per Page</label>
             <select
-              defaultValue={5}
+              value={recordsPerPage}
               id="recordsPerPage"
               onChange={(e) => setRecordsPerPage(Number(e.target.value))}
             >
-              <option value="5">5</option>
-              <option value="10">10</option>
-              <option value="15">15</option>
-              <option value="20">20</option>
-              <option value="25">25</option>
+              <option value={2}>2</option>
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={15}>15</option>
             </select>
-          </div>
+          </div> */}
 
           <div className="text-xl p-2">Total Users: {totalUsers}</div>
           <Pagination

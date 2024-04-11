@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { signInSchema } from "@/schemas/frontend";
-import { isUserExists } from "@/services/backend/user.service";
+import { isSuperAdminExists, isUserExists } from "@/services/backend/user.service";
 import { signToken } from "@/services/backend/jwt.service";
 import prisma from "@/db"
 
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     );
   }
   try {
-    const userExists = await isUserExists(email, password);
+    const userExists = await isSuperAdminExists(email, password);
     if (userExists) {
       const userId = userExists.user_id;
       const user_role_id = userExists.user_role_id!;

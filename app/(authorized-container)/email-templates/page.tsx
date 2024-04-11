@@ -16,7 +16,7 @@ const EmailTemplates: React.FC = () => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:3000/api/v1/email-template/", {
+      .get("http://localhost:3000/api/v1/admin/email-template/", {
         headers: {
           Authorization: localStorage.getItem("jwtToken"),
         },

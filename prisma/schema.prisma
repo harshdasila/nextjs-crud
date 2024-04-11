@@ -12,17 +12,19 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 model um_users {
-  user_id         Int       @unique @default(autoincrement())
-  user_name       String    @db.VarChar(250)
-  user_email      String    @db.VarChar(250)
-  user_password   String    @db.VarChar(250)
-  user_number     String    @db.VarChar(10)
-  user_created_at DateTime  @default(now())
-  user_updated_at DateTime  @updatedAt
-  user_deleted_at DateTime?
-  um_roles        um_roles @relation(fields: [user_role_id], references: [role_id])
-  user_role_id      Int @default(5)
+  user_id          Int                @id @unique @default(autoincrement())
+  user_name        String             @db.VarChar(250)
+  user_email       String             @db.VarChar(250)
+  user_password    String             @db.VarChar(250)
+  user_number      String             @db.VarChar(10)
+  user_created_at  DateTime           @default(now())
+  user_updated_at  DateTime           @updatedAt
+  user_deleted_at  DateTime?
+  um_roles         um_roles           @relation(fields: [user_role_id], references: [role_id])
+  user_role_id     Int                @default(5)
+  um_user_projects um_user_projects[]
 
   @@index([user_id])
 }
@@ -36,16 +38,38 @@ model um_roles {
   role_deleted_at DateTime?
   users           um_users[]
 
-  @@index([role_id,role_slug])
+  @@index([role_id, role_slug])
 }
 
 model um_email_templates {
-  et_id Int @unique @default(autoincrement())
-  et_slug String @unique @db.VarChar(155)
-  et_title String @db.VarChar(255)
-  et_subject String @db.VarChar(255)
-  et_content String @db.VarChar(5000)
-  et_created_at DateTime @default(now())
-  et_updated_at DateTime @updatedAt
+  et_id         Int       @unique @default(autoincrement())
+  et_slug       String    @unique @db.VarChar(155)
+  et_title      String    @db.VarChar(255)
+  et_subject    String    @db.VarChar(255)
+  et_content    String    @db.VarChar(5000)
+  et_created_at DateTime  @default(now())
+  et_updated_at DateTime  @updatedAt
   et_deleted_at DateTime?
+}
+
+model um_settings {
+  setting_key        String    @id @unique @db.VarChar(250)
+  setting_value      Int
+  setting_created_at DateTime  @default(now())
+  setting_updated_at DateTime  @updatedAt
+  setting_deleted_at DateTime?
+}
+
+model um_user_projects {
+  project_id          Int       @unique @default(autoincrement())
+  project_name        String    @db.VarChar(250)
+  project_slug        String    @db.VarChar(250)
+  project_description String
+  project_created_at  DateTime
+  project_deleted_at  DateTime?
+  project_updated_at  DateTime  @updatedAt
+  user                um_users  @relation(fields: [user_project_id], references: [user_id])
+  user_project_id     Int
+
+  @@index([project_id])
 }
